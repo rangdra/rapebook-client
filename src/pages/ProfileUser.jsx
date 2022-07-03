@@ -2,25 +2,24 @@ import { Tab } from '@headlessui/react';
 import { BriefcaseIcon, LocationMarkerIcon } from '@heroicons/react/solid';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import RightPart from 'parts/RightPart';
 import HeaderInput from 'components/HeaderInput';
 import Post from 'components/Post';
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
+import { getUserLogin } from 'redux/features/userSlice';
 
 const ProfileUser = () => {
   const params = useParams();
+  const dispatch = useDispatch();
+  const users = useSelector((state) => state.users);
   const [user, setUser] = useState(null);
+  const [refetch, setRefetch] = useState(true);
   const { posts } = useSelector((state) => state.posts);
-  const usernamePosts = posts.filter(
-    (post) => post.postedBy.username === user?.username
+  const postsUser = posts?.filter(
+    (post) => post?.postedBy.username === user?.username
   );
-  console.log(usernamePosts);
   const [show, setShow] = useState(false);
   const showScroll = () => {
     if (window.innerWidth >= 768) {
@@ -42,8 +41,27 @@ const ProfileUser = () => {
       setUser(res.data);
     };
 
-    getUser();
-  }, [params.username]);
+    if (refetch) {
+      getUser();
+      setRefetch(false);
+    }
+  }, [params.username, refetch, setRefetch]);
+
+  const follow = async () => {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    };
+    await axios.put(`/users/${user?._id}/follow`, {}, config);
+    setRefetch(true);
+    dispatch(getUserLogin());
+  };
+
+  const isFollow = user?.followers.some(
+    (follow) => follow?._id === users?.user?._id
+  );
+
   return (
     <section className="flex gap-4 p-4">
       <div className="hidden md:block" style={{ flex: 1 }}>
@@ -90,8 +108,24 @@ const ProfileUser = () => {
                 />
               </div>
 
-              <p className="text-lg font-bold">{user?.fullname}</p>
-              <p className="text-lg font-light">{user?.bio || ' - '}</p>
+              <p className="text-lg font-bold">
+                {user?.fullname}{' '}
+                <span className="text-base font-light">
+                  (@{user?.username})
+                </span>
+              </p>
+              <p className="text-lg font-extralight">{user?.bio || ' - '}</p>
+              <button
+                onClick={follow}
+                className={[
+                  'px-4 py-2 mt-2 rounded-lg duration-custom',
+                  isFollow
+                    ? 'text-purple-500 bg-white border border-purple-500'
+                    : 'bg-purple-500 text-white',
+                ].join(' ')}
+              >
+                {isFollow ? 'Unfollow' : 'Follow'}
+              </button>
             </div>
             <div className="flex items-center py-2 my-4 border-t-2 border-b-2 border-gray-300 divide-x-2 divide-gray-300">
               <div className="w-1/2 py-2">
@@ -108,33 +142,21 @@ const ProfileUser = () => {
               </div>
 
               <div className="w-1/2 py-2">
-                <p className="font-bold text-center">{usernamePosts?.length}</p>
+                <p className="font-bold text-center">{postsUser?.length}</p>
                 <p className="text-center text-gray-300">Posts</p>
               </div>
             </div>
           </div>
           <Tab.Group>
             <Tab.List className="flex p-1 mx-2 space-x-1 bg-purple-500 rounded-xl">
-              <Tab
-                className={({ selected }) =>
-                  classNames(
-                    'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                    'outline-none',
-                    selected
-                      ? 'bg-white shadow text-purple-500'
-                      : 'text-white hover:bg-white/[0.12] hover:text-white'
-                  )
-                }
-              >
-                John Posts
+              <Tab className="w-full py-2.5 text-sm font-medium leading-5 text-white text-center">
+                {user?.username} Posts
               </Tab>
             </Tab.List>
             <Tab.Panels className="mt-2">
               <Tab.Panel className="space-y-4">
-                {usernamePosts?.length > 0 ? (
-                  usernamePosts?.map((post) => (
-                    <Post post={post} key={post._id} />
-                  ))
+                {postsUser?.length > 0 ? (
+                  postsUser?.map((post) => <Post post={post} key={post._id} />)
                 ) : (
                   <p>Tidak ada postingan!</p>
                 )}

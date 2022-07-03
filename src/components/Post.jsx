@@ -91,7 +91,13 @@ const Post = ({ post }) => {
             </button>
           )}
 
-          <button onClick={openModal}>
+          <button onClick={openModal} className="relative">
+            {post?.comments.length > 0 && (
+              <span className="absolute flex items-center justify-center w-5 h-5 text-[10px] text-white bg-purple-500 rounded-full -top-1 -right-2">
+                {post?.comments.length}
+              </span>
+            )}
+
             <AnnotationIcon className="w-8 h-8 text-gray-800 hover:text-purple-500 duration-custom" />
           </button>
           <button>
@@ -128,9 +134,9 @@ const Post = ({ post }) => {
 
       <div className="flex items-center space-x-2 text-sm">
         <img
-          src={user?.pic}
+          src={post?.postedBy?.pic}
           className="object-cover w-8 h-8 rounded-full"
-          alt={user?.username}
+          alt={post?.postedBy?.username}
         />
         <p>
           <Link

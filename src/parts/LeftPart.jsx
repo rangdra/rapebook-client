@@ -20,6 +20,7 @@ const LeftPart = ({ isProfile }) => {
   function openModal() {
     setIsOpen(true);
   }
+
   return (
     <div className="hidden md:block" style={{ flex: 1 }}>
       <HeaderInput />
@@ -63,7 +64,7 @@ const LeftPart = ({ isProfile }) => {
                     </h2>
                     {user?.followers.length > 0 ? (
                       user?.followers.map((item) => (
-                        <UserFollowing user={item} />
+                        <UserFollowing user={item} key={item._id} />
                       ))
                     ) : (
                       <p>-</p>

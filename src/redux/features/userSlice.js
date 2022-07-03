@@ -67,7 +67,7 @@ export const updateUser = createAsyncThunk(
 );
 
 export const savePost = createAsyncThunk(
-  'posts/savePost',
+  'users/savePost',
   async (id, thunkAPI) => {
     const config = {
       headers: {
